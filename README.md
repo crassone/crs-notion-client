@@ -1,3 +1,6 @@
+[![Build and Commit Gem](https://github.com/crassone/crs-notion-client/actions/workflows/build-and-commit-gem.yml/badge.svg)](https://github.com/crassone/crs-notion-client/actions/workflows/build-and-commit-gem.yml)
+[![Ruby](https://github.com/crassone/crs-notion-client/actions/workflows/main.yml/badge.svg)](https://github.com/crassone/crs-notion-client/actions/workflows/main.yml)
+
 # Crs::Notion::Client
 
 ## 📖 使用方法:
