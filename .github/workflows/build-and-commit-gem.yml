@@ -19,7 +19,7 @@ jobs:
           ruby-version: "3.4"
 
       - name: Build gem
-        run: gem build crs-slack-client.gemspec
+        run: gem build crs-notion-client.gemspec
 
       - name: Commit and push .gem file
         run: |
