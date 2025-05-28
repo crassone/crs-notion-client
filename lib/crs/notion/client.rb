@@ -19,7 +19,7 @@ module Crs
         endpoint = "https://api.notion.com/v1/pages/#{id}"
 
         # HTTPartyを使ってGETリクエストを送信
-        response = HTTParty.get(endpoint, headers:)
+        response = ::HTTParty.get(endpoint, headers:)
         raise "Notion API Error: #{response.code}, #{response.message}" if response.code != 200
 
         JSON.parse(response.body)
