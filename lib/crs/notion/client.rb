@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative "client/version"
+require "httparty"
 
 module Crs
   module Notion
