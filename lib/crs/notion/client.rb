@@ -39,6 +39,23 @@ module Crs
         
         JSON.parse(response.body)
       end
+
+      # データベースアイテムを更新するメソッド
+      # @param id [String] 更新するアイテム（ページ）のID
+      # @param properties [Hash] 更新するプロパティの情報
+      # @return [Hash] 更新されたアイテムの情報
+      def update_database_item(item_id:, properties:)
+        endpoint = "https://api.notion.com/v1/pages/#{item_id}"
+        
+        body = {
+          properties: properties
+        }
+        
+        response = ::HTTParty.patch(endpoint, headers: headers, body: body.to_json)
+        raise "Notion API Error: #{response.code}, #{response.message}" if response.code != 200
+        
+        JSON.parse(response.body)
+      end
     end
   end
 end
