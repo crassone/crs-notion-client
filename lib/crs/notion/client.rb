@@ -5,8 +5,12 @@ require "httparty"
 
 module Crs
   module Notion
+    # Notion APIを操作する際に利用するクライアントクラス
     class Client
       attr_accessor :headers
+      attr_reader :api_version
+
+      API_BASE_URL = "https://api.notion.com/v1"
 
       def initialize(notion_token: nil)
         @headers = {
@@ -17,41 +21,50 @@ module Crs
       end
 
       def get_page(id:)
-        endpoint = "https://api.notion.com/v1/pages/#{id}"
-
-        # HTTPartyを使ってGETリクエストを送信
-        response = ::HTTParty.get(endpoint, headers:)
-        raise "Notion API Error: #{response.code}, #{response.message}" if response.code != 200
-
-        JSON.parse(response.body)
+        request(:get, "pages/#{id}")
       end
 
       def create_database_item(database_id:, properties:)
-        endpoint = "https://api.notion.com/v1/pages"
-
         body = {
           parent: { database_id: database_id },
           properties: properties
         }
 
-        response = ::HTTParty.post(endpoint, headers: headers, body: body.to_json)
-        raise "Notion API Error: #{response.code}, #{response.message}" if response.code != 200
-
-        JSON.parse(response.body)
+        request(:post, "pages", body)
       end
 
       # データベースアイテムを更新するメソッド
-      # @param id [String] 更新するアイテム（ページ）のID
+      # @param item_id [String] 更新するアイテム（ページ）のID
       # @param properties [Hash] 更新するプロパティの情報
       # @return [Hash] 更新されたアイテムの情報
       def update_database_item(item_id:, properties:)
-        endpoint = "https://api.notion.com/v1/pages/#{item_id}"
-
         body = {
           properties: properties
         }
 
-        response = ::HTTParty.patch(endpoint, headers: headers, body: body.to_json)
+        request(:patch, "pages/#{item_id}", body)
+      end
+
+      private
+
+      # 共通の API リクエスト処理メソッド
+      def request(method, endpoint, body = nil)
+        url = "#{API_BASE_URL}/#{endpoint}"
+
+        response = case method
+                   when :get
+                     ::HTTParty.get(url, headers: headers)
+                   when :post
+                     ::HTTParty.post(url, headers: headers, body: body.to_json)
+                   when :patch
+                     ::HTTParty.patch(url, headers: headers, body: body.to_json)
+                   end
+
+        handle_response(response)
+      end
+
+      # レスポンス処理の共通メソッド
+      def handle_response(response)
         raise "Notion API Error: #{response.code}, #{response.message}" if response.code != 200
 
         JSON.parse(response.body)
