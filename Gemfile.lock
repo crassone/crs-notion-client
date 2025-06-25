@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    crs-notion-client (0.1.0)
+    crs-notion-client (0.2.0)
       httparty (~> 0.23.1)
 
 GEM
