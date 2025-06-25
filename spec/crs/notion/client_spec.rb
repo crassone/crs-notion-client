@@ -653,4 +653,153 @@ RSpec.describe Crs::Notion::Client do
       client.update_database_item(item_id: "test-item-id", properties: {})
     end
   end
+
+  describe "#search_database" do
+    let(:database_id) { "67890abc-1234-5678-9abc-def123456789" }
+    let(:filter) do
+      {
+        "property" => "Status",
+        "select" => {
+          "equals" => "Active"
+        }
+      }
+    end
+    let(:endpoint) { "https://api.notion.com/v1/databases/#{database_id}/query" }
+
+    context "when API call is successful with all parameters" do
+      let(:page_size) { 10 }
+      let(:request_body) do
+        {
+          filter: filter,
+          page_size: page_size
+        }
+      end
+      let(:sample_response) do
+        {
+          "object" => "list",
+          "results" => [
+            {
+              "object" => "page",
+              "id" => "page1-id",
+              "properties" => {
+                "Status" => {
+                  "select" => {
+                    "name" => "Active"
+                  }
+                }
+              }
+            }
+          ],
+          "next_cursor" => "next123",
+          "has_more" => false
+        }
+      end
+      let(:mock_response) do
+        double("HTTParty::Response",
+               code: 200,
+               body: sample_response.to_json)
+      end
+
+      before do
+        allow(HTTParty).to receive(:post)
+          .with(endpoint, headers: client.headers, body: request_body.to_json)
+          .and_return(mock_response)
+      end
+
+      it "returns parsed JSON response" do
+        result = client.search_database(
+          database_id: database_id,
+          filter: filter,
+          page_size: page_size
+        )
+        expect(result).to eq(sample_response)
+      end
+
+      it "calls HTTParty.post with correct parameters" do
+        client.search_database(
+          database_id: database_id,
+          filter: filter,
+          page_size: page_size
+        )
+        expect(HTTParty).to have_received(:post)
+          .with(endpoint, headers: client.headers, body: request_body.to_json)
+      end
+    end
+
+    context "when called with only database_id" do
+      let(:request_body) { { page_size: 10 } }
+      let(:mock_response) do
+        double("HTTParty::Response",
+               code: 200,
+               body: { "object" => "list", "results" => [] }.to_json)
+      end
+
+      before do
+        allow(HTTParty).to receive(:post)
+          .with(endpoint, headers: client.headers, body: request_body.to_json)
+          .and_return(mock_response)
+      end
+
+      it "sends request with default page_size of 10" do
+        client.search_database(database_id: database_id)
+        expect(HTTParty).to have_received(:post)
+          .with(endpoint, headers: client.headers, body: request_body.to_json)
+      end
+    end
+
+    context "when called with filter only" do
+      let(:request_body) { { filter: filter, page_size: 10 } }
+      let(:mock_response) do
+        double("HTTParty::Response",
+               code: 200,
+               body: { "object" => "list", "results" => [] }.to_json)
+      end
+
+      before do
+        allow(HTTParty).to receive(:post)
+          .with(endpoint, headers: client.headers, body: request_body.to_json)
+          .and_return(mock_response)
+      end
+
+      it "sends request with filter and default page_size" do
+        client.search_database(database_id: database_id, filter: filter)
+        expect(HTTParty).to have_received(:post)
+          .with(endpoint, headers: client.headers, body: request_body.to_json)
+      end
+    end
+
+    context "when API call fails with 400 Bad Request" do
+      let(:mock_response) do
+        double("HTTParty::Response",
+               code: 400,
+               message: "Bad Request")
+      end
+
+      before do
+        allow(HTTParty).to receive(:post).and_return(mock_response)
+      end
+
+      it "raises an error with appropriate message" do
+        expect { client.search_database(database_id: database_id) }
+          .to raise_error(RuntimeError, "Notion API Error: 400, Bad Request")
+      end
+    end
+
+    context "when API call fails with 404 Not Found" do
+      let(:mock_response) do
+        double("HTTParty::Response",
+               code: 404,
+               message: "Not Found")
+      end
+
+      before do
+        allow(HTTParty).to receive(:post).and_return(mock_response)
+      end
+
+      it "raises an error with appropriate message" do
+        expect { client.search_database(database_id: database_id) }
+          .to raise_error(RuntimeError, "Notion API Error: 404, Not Found")
+      end
+    end
+  end
 end

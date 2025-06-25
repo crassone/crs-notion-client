@@ -45,6 +45,19 @@ module Crs
         request(:patch, "pages/#{item_id}", body)
       end
 
+      # データベースから条件を満たすアイテムを検索するメソッド
+      # @param database_id [String] データベースのID
+      # @param filter [Hash] フィルタリング条件
+      # @param page_size [Integer] 取得するアイテム数（デフォルト10件）
+      # @return [Hash] 検索結果
+      def search_database(database_id:, filter: nil, page_size: 10)
+        body = {}
+        body[:filter] = filter if filter
+        body[:page_size] = page_size
+
+        request(:post, "databases/#{database_id}/query", body)
+      end
+
       private
 
       # 共通の API リクエスト処理メソッド
